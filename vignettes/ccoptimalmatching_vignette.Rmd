@@ -173,17 +173,21 @@ not_processed <- as.data.frame(not_processed)
 ```
 
 After creating the variable "cluster_case", we split again the cases and controls into two different data-sets:
+
 ```{r}
 bdd_cases <- not_processed[not_processed$case_control=="case",]
 bdd_control <- not_processed[not_processed$case_control=="control",]
 ```
+
 Next, we create an empty data-frame and a unique list of the variable "cluster_case":
+
 ```{r}
-bdd_temp <- data.frame()
+bdd_temp <- list()
 list_p <- unique(bdd_cases$cluster_case)
 ```
 
 Below it is the loop to generate the pseudo-observations for controls, which will be explained in details. We start by identifying in which subset each case belongs. Next, we check which controls are in the same subset and bind those controls to the case. For example, subset 1 has 2 cases and 1,523 controls. By creating pseudo-observations for controls, subset 1 will have 2 cases and 3,046 controls. Finally, we select the range for the age and follow-up. For demonstration purposes, we decided that an absolute difference of age smaller than 2 is acceptable and that the follow-up time between cases and controls is exact.  Since the 2 cases are different in subset 1 in terms of age and follow-up, each case will end up with a different number of controls available to pool:
+
 ```{r}
 for(i in 1:length(list_p)){
  temp <- bdd_cases[bdd_cases$cluster_case==list_p[i],]
@@ -198,8 +202,10 @@ for(i in 1:length(list_p)){
  temp_final$age_fup <- ifelse(temp_final$age_diff<=2&temp_final$fup_diff==0,"accept","delete")
  temp_final <- temp_final[temp_final$age_fup=="accept",]
  temp_final$age_fup <- NULL
- bdd_temp <- rbind(bdd_temp,temp_final)
+ bdd_temp[[i]] <- temp_final
 }
+
+bdd_temp <- do.call(rbind, bdd_temp)
 ```
 
 Let us tabulate the "case_control" variable again:
@@ -275,15 +281,21 @@ Below we summarise the steps that explain how the algorithm works.
 
 We can see the first 20 rows:
 ```{r}
-final_data <- final_data %>% arrange(cluster_case)
+final_data <- final_data %>% 
+  arrange(cluster_case)
+
 head(final_data,20)
 ```
 
 If we want to see how many controls are matched for each case, then:
 ```{r}
-final_data = final_data %>% group_by(cluster_case) %>% mutate(total_control_matched = n()-1)
+final_data = final_data %>% 
+  group_by(cluster_case) %>% 
+  mutate(total_control_matched = n()-1)
+
 table(final_data$case_control,final_data$total_control_matched)
 ```
+
 16 cases have only 1 control, 9 cases have 2 controls, 6 cases have 3 controls and finally 161 cases have 4 controls, using the criteria above.
 
 # Extensions and Summary
