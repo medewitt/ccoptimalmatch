@@ -6,7 +6,9 @@
 #' @param total_cont_per_case a string
 #' @param case_control a string
 #' @param mat_per_case a numeric indicating number of matches per case with default of \code{NULL}
-#' @keywords internal
+#' @importFrom data.table `.N` `.SD` `:=`
+#' @importFrom utils head
+#' @keywords internal 
 iterations_per_round_dt <- function(dataset, cluster_var, 
                                  Id_Patient, total_cont_per_case, 
                                  case_control, mat_per_case = NULL) {
@@ -28,16 +30,18 @@ iterations_per_round_dt <- function(dataset, cluster_var,
   
   if (nrow(dup_con) > 0) {
     one_to_one <- one_to_one[!dup_con, on = get(Id_Patient)]
+    one_to_one <- rbind(one_to_one,dup_con)
+    one_to_one <- one_to_one[order(get(cluster_var), get(case_control))]
+    one_to_one <- one_to_one[,mat_per_case := .N -1, by = get(cluster_var)]
     
+    case_cntrl_1st_wave <- one_to_one[mat_per_case == 1][,mat_per_case := NULL]
     
-    one_to_one <- bind_rows(one_to_one, dup_con) %>% arrange((!!cluster_var), case_control)
-    one_to_one <- one_to_one %>% group_by((!!cluster_var)) %>% mutate(mat_per_case = n() - 1)
-    case_cntrl_1st_wave <- one_to_one %>% filter(mat_per_case == 1) %>% select(-mat_per_case)
-    dataset <- anti_join(dataset, case_cntrl_1st_wave, by = quo_name(cluster_var))
-    dataset <- anti_join(dataset, case_cntrl_1st_wave, by = quo_name(Id_Patient))
+    dataset <- dataset[!case_cntrl_1st_wave, on = get(cluster_var)]
+    dataset <- dataset[!case_cntrl_1st_wave, on = get(Id_Patient)]
+  
   } else {
-    one_to_one <- one_to_one %>% group_by((!!cluster_var)) %>% mutate(mat_per_case = n() - 1)
-    case_cntrl_1st_wave <- one_to_one %>% filter(mat_per_case == 1) %>% select(-mat_per_case)
+    one_to_one <- one_to_one[,mat_per_case := .N -1, by = get(cluster_var)]
+    case_cntrl_1st_wave <- one_to_one[mat_per_case == 1][,mat_per_case := NULL]
     dataset <- NULL
   }
   return(list(case_cntrl_1st_wave = case_cntrl_1st_wave, dataset = dataset, dup_con = dup_con))

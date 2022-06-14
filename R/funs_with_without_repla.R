@@ -39,7 +39,6 @@ iterations_per_round <- function(dataset, cluster_var, Id_Patient, total_cont_pe
 #' @param with_replacement Use replacement or not
 #'
 #' @import dplyr
-#' @importFrom rlang :=
 #' @return a data frame containing the cases and the corresponding number of controls
 #' @export
 #'
@@ -103,7 +102,9 @@ optimal_matching <- function(total_database, n_con, cluster_var, Id_Patient,
 
                     tmp_database <- total_database  # Goes back to the original file (cause we need the original one)
                     tmp_database <- anti_join(tmp_database, waves_round_merge, by = quo_name(Id_Patient))
-                    tmp_database = tmp_database %>% group_by((!!cluster_var)) %>% mutate(`:=` (!!total_cont_per_case, n() - 1))
+                    tmp_database = tmp_database %>% 
+                      dplyr::group_by((!!cluster_var)) %>% 
+                      dplyr::mutate(rlang::`:=` (!!total_cont_per_case, dplyr::n() - 1))
 
 
                     dup_con <- 1  # Again the same as in the iterations_per_round but we do it iteratively by using the [[i_con]]

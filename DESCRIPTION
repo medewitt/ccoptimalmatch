@@ -15,7 +15,10 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
-Imports: dplyr, rlang
+Imports: 
+    data.table,
+    dplyr,
+    rlang
 Suggests: 
     knitr,
     rmarkdown

@@ -262,6 +262,7 @@ We have the data ready to be used for the algorithm. The "optimal_matching" func
 ```{r, echo=F, results='hide',message=FALSE}
 library(ccoptimalmatch)
 ```
+
 ```{r}
 final_data <- optimal_matching(bdd_temp, n_con=4, cluster_case, Patient_Id, 
                                total_control_per_case, case_control, with_replacement = FALSE)

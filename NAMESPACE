@@ -2,4 +2,7 @@
 
 export(optimal_matching)
 import(dplyr)
-importFrom(rlang,":=")
+importFrom(data.table,`.N`)
+importFrom(data.table,`.SD`)
+importFrom(data.table,`:=`)
+importFrom(utils,head)
